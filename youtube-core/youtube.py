@@ -18,6 +18,21 @@ class YouTubeError:
     message: str
     details: Optional[str] = None
 
+@dataclass
+class YouTubeVideoBuilder:
+    """Custom video object builder for YouTube videos"""
+    video_id: str
+    title: str
+    description: str
+    author: str
+    channel_id: str
+    length_seconds: int
+    view_count: int
+    keywords: list
+    upload_date: str
+    category: str
+    thumbnail_url: str
+
 class YouTubeAPIWrapper:
     """
     Enhanced YouTube API wrapper with improved error handling and reliability
@@ -212,7 +227,7 @@ class YouTubeAPIWrapper:
                 details=str(e)
             )
     
-    def get_video_info(self, video_id: str) -> Union[Dict, YouTubeError]:
+    def get_video_info(self, video_id: str) -> Union[YouTubeVideoBuilder, YouTubeError]:
         """
         Fetch metadata for a YouTube video
         
@@ -263,9 +278,8 @@ class YouTubeAPIWrapper:
             
             # Build result dictionary
             result = self._build_video_info_dict(video_details, microformat)
-            
             logger.info(f"Successfully extracted info for video: {result.get('title', 'Unknown')}")
-            return result
+            return YouTubeVideoBuilder(**result)
             
         except YouTubeError:
             raise
