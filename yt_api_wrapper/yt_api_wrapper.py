@@ -6,9 +6,9 @@ import time
 import logging
 from typing import Dict, List, Optional, Union
 
-from models import YouTubeError, YouTubeVideoBuilder
-from utils import _extract_player_response, _validate_query, _validate_video_id, _build_video_info_dict
-
+from .models import YouTubeError, YouTubeVideoBuilder
+from .utils import _validate_query, _validate_video_id, _build_video_info_dict
+from .parser import _extract_player_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
