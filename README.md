@@ -1,6 +1,11 @@
 # Fast and lightweight youtube scraper for python
 >Warning: The user/developer is solely responsible for the use of this code, I am not responsible for copyrights and YouTube restrictions. It is for educational purposes only, do not misuse it.
 
+## Installing
+```
+pip install yt-api-wrapper
+```
+
 ## How to use?
 It is very simple to use and only one line. Below are some examples:
 
