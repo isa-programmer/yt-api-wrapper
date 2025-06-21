@@ -8,8 +8,7 @@ from typing import Dict, List, Optional, Union
 
 from .models import YouTubeError, YouTubeVideoBuilder
 from .utils import _validate_query, _validate_video_id, _build_video_info_dict
-from .parser import _extract_player_response
-
+from .parser import _extract_player_response, _extract_search_results
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -228,7 +227,41 @@ class YouTubeAPIWrapper:
                 message="An unexpected error occurred",
                 details=str(e)
             ) 
-    
+    def search_videos(self, query: str, max_results: int = 10) -> Union[List[Dict], YouTubeError]:
+            """
+            Search YouTube for videos by keyword.
+
+            Args:
+                query: The search keyword.
+                max_results: Maximum number of videos to return.
+
+            Returns:
+                A list of dicts, each with channel id, channel name, thumbnail url, view count, video duration, video id, and title.
+                Or a YouTubeError on failure.
+            """
+            try:
+                _validate_query(query)
+                api_url = "https://www.youtube.com/results"
+                params = {"search_query": query.strip()}
+                logger.info(f"Searching YouTube for videos: '{query}'")
+                response = self._make_request(api_url, params)
+                html_content = response.text
+                videos = _extract_search_results(html_content)
+                if not videos:
+                    return YouTubeError(
+                        error_type="NO_RESULTS",
+                        message="No videos found for the search query."
+                    )
+                return videos[:max_results]
+            except YouTubeError:
+                raise
+            except Exception as e:
+                logger.error(f"Unexpected error in search_videos: {e}")
+                return YouTubeError(
+                    error_type="UNEXPECTED_ERROR",
+                    message="An unexpected error occurred during search.",
+                    details=str(e)
+                )
     def __del__(self):
         """Close the session when the object is destroyed"""
         if hasattr(self, 'session'):

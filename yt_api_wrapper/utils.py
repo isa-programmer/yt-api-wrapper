@@ -108,5 +108,5 @@ def _build_video_info_dict(video_details: Dict, microformat: Dict) -> Dict:
             # Get the highest quality thumbnail
             result["thumbnail_url"] = thumbnails[-1].get("url", "")
         del result["thumbnail"]
-    
+    result['keywords'] = result.get('keywords',[])
     return result

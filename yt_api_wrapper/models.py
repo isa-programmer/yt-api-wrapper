@@ -1,6 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
+
 @dataclass
 class YouTubeError:
     """Custom error class for YouTube API wrapper"""
