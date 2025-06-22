@@ -6,7 +6,7 @@ import time
 import logging
 from typing import Dict, List, Optional, Union
 
-from .models import YouTubeError, YouTubeVideoBuilder
+from .models import YouTubeError
 from .utils import _validate_query, _validate_video_id, _build_video_info_dict
 from .parser import _extract_player_response, _extract_search_results
 # Configure logging
@@ -164,7 +164,7 @@ class YouTubeAPIWrapper:
                 details=str(e)
             )
     
-    def get_video_info(self, video_id: str) -> Union[YouTubeVideoBuilder, YouTubeError]:
+    def get_video_info(self, video_id: str) -> Union[Dict,YouTubeError]:
         """
         Fetch metadata for a YouTube video
         
@@ -216,7 +216,7 @@ class YouTubeAPIWrapper:
             # Build result dictionary
             result = _build_video_info_dict(video_details, microformat)
             logger.info(f"Successfully extracted info for video: {result.get('title', 'Unknown')}")
-            return YouTubeVideoBuilder(**result)
+            return result
             
         except YouTubeError:
             raise
