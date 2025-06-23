@@ -23,6 +23,8 @@ INFO:yt_api_wrapper.yt_api_wrapper:Successfully extracted info for video: Rick A
 
 >>> results = yt.search_videos('python course') # Search videos
 INFO:yt_api_wrapper.yt_api_wrapper:Searching YouTube for videos: 'python course'
+
+>>> channel = yt.get_channel_info('UCuAXFkgsw1L7xaCfnd5JJOw')
 ```
 
 ## How to Contribute

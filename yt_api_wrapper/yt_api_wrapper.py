@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 
 from .models import YouTubeError
 from .utils import _validate_query, _validate_video_id, _build_video_info_dict
-from .parser import _extract_player_response, _extract_search_results
+from .parser import _extract_player_response, _extract_search_results, _extract_initial_data
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -262,6 +262,27 @@ class YouTubeAPIWrapper:
                     message="An unexpected error occurred during search.",
                     details=str(e)
                 )
+    def get_channel_info(self,channel_id: str) -> Union[Dict,YouTubeError]:
+        """
+        """
+        response = self._make_request(f"https://youtube.com/channel/{channel_id}")
+        data = _extract_initial_data(response.text)
+        if not data:
+            return YouTubeError(
+                error_type="PLAYER_RESPONSE_NOT_FOUND",
+                message="ytInitialPlayerResponse not found",
+                details=""
+            )
+        json_data = json.loads(data)
+        pageHeader = json_data['header']['pageHeaderRenderer']
+        banner = pageHeader['content']['pageHeaderViewModel'].get('banner')
+        result = {}
+        result["banner_image"] = banner['imageBannerViewModel']['image']['sources'][-1]['url'] if banner else ""
+        result["profile_image"] = json_data['microformat']['microformatDataRenderer']['thumbnail']['thumbnails'][0]['url']
+        result["description"] = pageHeader['content']['pageHeaderViewModel']['description']['descriptionPreviewViewModel']['description']['content']
+        result["channel_name"] = pageHeader['pageTitle']
+        return result
+
     def __del__(self):
         """Close the session when the object is destroyed"""
         if hasattr(self, 'session'):

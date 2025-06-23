@@ -17,6 +17,22 @@ def _extract_player_response(html_content: str) -> Optional[str]:
             return match.group(1)
     return None
 
+def _extract_initial_data(html_content: str) -> Optional[str]:
+    """
+    Extract ytInitialPlayerResponse JSON from HTML content
+    """
+    patterns = [
+        r'ytInitialData\s*=\s*({.+?});',
+        r'ytInitialData":\s*({.+?}),'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, html_content, re.DOTALL)
+        if match:
+            return match.group(1)
+    return None
+
+
+
 def _extract_search_results(html_content: str) -> List[Dict]:
     """
     Extract video results from YouTube search HTML.
