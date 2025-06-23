@@ -21,6 +21,10 @@ dev = [
     "isort"
 ]
 
+orjson = [
+    "orjson>=3.6.8"
+]
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
