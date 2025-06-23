@@ -1,7 +1,7 @@
 import requests
 
 try:
-    import orjson
+    import orjson as json
 except ImportError:
     import json
     orjson = None
