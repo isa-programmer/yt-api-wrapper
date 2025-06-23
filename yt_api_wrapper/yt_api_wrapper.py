@@ -1,7 +1,6 @@
 import requests
 import json
 import ast
-import re
 import time
 import logging
 from typing import Dict, List, Optional, Union
