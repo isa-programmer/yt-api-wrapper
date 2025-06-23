@@ -25,6 +25,27 @@ INFO:yt_api_wrapper.yt_api_wrapper:Successfully extracted info for video: Rick A
 INFO:yt_api_wrapper.yt_api_wrapper:Searching YouTube for videos: 'python course'
 
 >>> channel = yt.get_channel_info('UCuAXFkgsw1L7xaCfnd5JJOw')
+
+# Asynchronous usage
+
+>>> import asyncio
+>>> from yt_api_wrapper import AsyncYouTubeAPIWrapper
+>>> yt_async = AsyncYouTubeAPIWrapper()
+>>> async def main():
+...     # Asynchronous auto complete
+...     suggestions = await yt_async.auto_complete('pytho')
+...     print(suggestions)
+...     # Asynchronous video info
+...     video_info = await yt_async.get_video_info('dQw4w9WgXcQ')
+...     print(video_info)
+...     # Asynchronous search videos
+...     search_results = await yt_async.search_videos('python course')
+...     print(search_results)
+...     # Asynchronous channel info
+...     channel_info = await yt_async.get_channel_info('UCuAXFkgsw1L7xaCfnd5JJOw')
+...     print(channel_info)
+
+>>> asyncio.run(main())
 ```
 
 ## How to Contribute
