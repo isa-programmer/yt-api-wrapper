@@ -1,5 +1,12 @@
 import requests
-import json
+
+try:
+    import orjson
+except ImportError:
+    import json
+    orjson = None
+
+
 import ast
 import re
 import time
