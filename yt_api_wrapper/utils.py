@@ -27,7 +27,7 @@ def _validate_query(query: str) -> None:
 
 
 
-def validate_video_id(video_id: str) -> None:
+def _validate_video_id(video_id: str) -> None:
     """
     Validate YouTube video ID format
     
@@ -51,7 +51,7 @@ def validate_video_id(video_id: str) -> None:
         )
 
 
-def validate_channel_id(channel_id: str) -> None:
+def _validate_channel_id(channel_id: str) -> None:
     """
     Validate YouTube channel ID format
     
