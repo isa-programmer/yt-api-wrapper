@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class AsyncYouTubeAPIWrapper:
     """
-    Enhanced YouTube API wrapper with improved error handling and reliability
+     async YouTube API wrapper with improved error handling and reliability
     """
     
     def __init__(self, timeout: int = 10, max_retries: int = 3, retry_delay: float = 1.0):
@@ -33,7 +33,22 @@ class AsyncYouTubeAPIWrapper:
         self.session_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
+        self._session = None
     
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """
+        Get or create aiohttp session
+        
+        Returns:
+            aiohttp.ClientSession instance
+        """
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(
+                headers=self.session_headers,
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            )
+        return self._session
 
     async def _make_request(self, url: str, params: Optional[Dict] = None) -> aiohttp.ClientResponse:
         """
@@ -53,25 +68,21 @@ class AsyncYouTubeAPIWrapper:
         
         for attempt in range(self.max_retries + 1):
             try:
-                async with aiohttp.ClientSession(headers=self.session_headers) as session:
-                    async with session.get(
-                        url,
-                        params=params,
-                        timeout=aiohttp.ClientTimeout(total=self.timeout),
-                    ) as response:
-                        if response.status == 200:
-                            return response
+                session = await self._get_session()
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        return response
+                    else:
+                        logger.warning(f"HTTP {response.status} on attempt {attempt + 1}")
+                        if attempt < self.max_retries:
+                            await asyncio.sleep(self.retry_delay * (2 ** attempt))  # Exponential backoff
+                            continue
                         else:
-                            logger.warning(f"HTTP {response.status} on attempt {attempt + 1}")
-                            if attempt < self.max_retries:
-                                await asyncio.sleep(self.retry_delay * (2 ** attempt))  # Exponential backoff
-                                continue
-                            else:
-                                raise YouTubeError(
-                                    error_type="HTTP_ERROR",
-                                    message=f"HTTP {response.status}",
-                                    details=(await response.text())[:200]
-                                )
+                            raise YouTubeError(
+                                error_type="HTTP_ERROR",
+                                message=f"HTTP {response.status}",
+                                details=(await response.text())[:200]
+                            )
 
             except Exception as e: # Catch all exceptions
                 last_exception = e
@@ -292,3 +303,22 @@ class AsyncYouTubeAPIWrapper:
         result["description"] = pageHeader['content']['pageHeaderViewModel']['description']['descriptionPreviewViewModel']['description']['content']
         result["channel_name"] = pageHeader['pageTitle']
         return result
+
+    async def aclose(self):
+        """
+        Close the aiohttp session
+        """
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def __aenter__(self):
+        """
+        Async context manager entry
+        """
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Async context manager exit
+        """
+        await self.aclose()
