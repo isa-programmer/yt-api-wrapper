@@ -1,3 +1,4 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/isa-programmer/yt_api_wrapper?utm_source=oss&utm_medium=github&utm_campaign=isa-programmer%2Fyt_api_wrapper&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 # Fast and Lightweight YouTube Scraper for Python
 
 > **Warning:** The user/developer is solely responsible for the use of this code. I am not responsible for copyrights and YouTube restrictions.  
