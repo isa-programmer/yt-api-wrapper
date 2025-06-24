@@ -1,6 +1,6 @@
 [project]
 name = "yt-api-wrapper"
-version = "1.0.3"
+version = "1.0.4"
 description = "A YouTube web scraper/wrapper for fetching video metadata and search results."
 authors = [
     { name="isa-programmer", email="isaprogrammer@proton.me" }
@@ -22,7 +22,8 @@ dev = [
 ]
 
 async = [
-    "aiohttp[speedups]",
+    "aiohttp[speedups]"
+]
 
 orjson = [
     "orjson>=3.6.8"
