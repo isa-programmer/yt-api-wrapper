@@ -27,7 +27,7 @@ def _validate_query(query: str) -> None:
 
 
 
-def _validate_video_id(video_id: str) -> None:
+def validate_video_id(video_id: str) -> None:
     """
     Validate YouTube video ID format
     
@@ -48,6 +48,31 @@ def _validate_video_id(video_id: str) -> None:
         raise YouTubeError(
             error_type="INVALID_INPUT",
             message="Invalid YouTube video ID format"
+        )
+
+
+def validate_channel_id(channel_id: str) -> None:
+    """
+    Validate YouTube channel ID format
+    
+    Args:
+        channel_id: YouTube channel ID
+        
+    Raises:
+        YouTubeError: If channel ID is invalid
+    """
+    if not channel_id or not channel_id.strip():
+        raise YouTubeError(
+            error_type="INVALID_INPUT",
+            message="Channel ID cannot be empty"
+        )
+    
+    # YouTube channel IDs start with 'UC' and are 24 characters long
+    # They contain alphanumeric characters, hyphens, and underscores
+    if not re.match(r'^UC[a-zA-Z0-9_-]{22}$', channel_id.strip()):
+        raise YouTubeError(
+            error_type="INVALID_INPUT",
+            message="Invalid YouTube channel ID format. Channel IDs should start with 'UC' and be 24 characters long."
         )
 
 
