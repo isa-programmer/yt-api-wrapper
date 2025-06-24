@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class YouTubeError(BaseException):
+class YouTubeError(Exception):
     """Custom error class for YouTube API wrapper"""
     error_type: str
     message: str
