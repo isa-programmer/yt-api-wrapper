@@ -21,6 +21,9 @@ dev = [
     "isort"
 ]
 
+async = [
+    "aiohttp[speedups]",
+
 orjson = [
     "orjson>=3.6.8"
 ]

@@ -1,14 +1,7 @@
-import requests
-
-try:
-    import orjson as json
-except ImportError:
-    import json
-    orjson = None
-
-
+import aiohttp
+import asyncio
+import json
 import ast
-import time
 import logging
 from typing import Dict, List, Optional, Union
 
@@ -20,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class YouTubeAPIWrapper:
+class AsyncYouTubeAPIWrapper:
     """
     Enhanced YouTube API wrapper with improved error handling and reliability
     """
@@ -37,12 +30,12 @@ class YouTubeAPIWrapper:
         self.timeout = timeout
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.session = requests.Session()
-        self.session.headers.update({
+        self.session_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
+        }
     
-    def _make_request(self, url: str, params: Optional[Dict] = None) -> requests.Response:
+
+    async def _make_request(self, url: str, params: Optional[Dict] = None) -> aiohttp.ClientResponse:
         """
         Make HTTP request with retry logic
         
@@ -60,31 +53,31 @@ class YouTubeAPIWrapper:
         
         for attempt in range(self.max_retries + 1):
             try:
-                response = self.session.get(
-                    url, 
-                    params=params, 
-                    timeout=self.timeout
-                )
-                
-                if response.ok:
-                    return response
-                else:
-                    logger.warning(f"HTTP {response.status_code} on attempt {attempt + 1}")
-                    if attempt < self.max_retries:
-                        time.sleep(self.retry_delay * (2 ** attempt))  # Exponential backoff
-                        continue
-                    else:
-                        raise YouTubeError(
-                            error_type="HTTP_ERROR",
-                            message=f"HTTP {response.status_code}",
-                            details=response.text[:200]
-                        )
-                        
-            except requests.exceptions.RequestException as e:
+                async with aiohttp.ClientSession(headers=self.session_headers) as session:
+                    async with session.get(
+                        url,
+                        params=params,
+                        timeout=aiohttp.ClientTimeout(total=self.timeout),
+                    ) as response:
+                        if response.status == 200:
+                            return response
+                        else:
+                            logger.warning(f"HTTP {response.status} on attempt {attempt + 1}")
+                            if attempt < self.max_retries:
+                                await asyncio.sleep(self.retry_delay * (2 ** attempt))  # Exponential backoff
+                                continue
+                            else:
+                                raise YouTubeError(
+                                    error_type="HTTP_ERROR",
+                                    message=f"HTTP {response.status}",
+                                    details=(await response.text())[:200]
+                                )
+
+            except Exception as e: # Catch all exceptions
                 last_exception = e
                 logger.warning(f"Request failed on attempt {attempt + 1}: {e}")
                 if attempt < self.max_retries:
-                    time.sleep(self.retry_delay * (2 ** attempt))
+                    await asyncio.sleep(self.retry_delay * (2 ** attempt))
                     continue
         
         raise YouTubeError(
@@ -94,7 +87,7 @@ class YouTubeAPIWrapper:
         )
 
     
-    def auto_complete(self, query: str) -> Union[List[str], YouTubeError]:
+    async def auto_complete(self, query: str) -> Union[List[str], YouTubeError]:
         """
         Fetch autocomplete suggestions for a search query
         
@@ -116,10 +109,10 @@ class YouTubeAPIWrapper:
             }
             
             logger.info(f"Fetching autocomplete for query: '{query}'")
-            response = self._make_request(api_url, params)
+            response = await self._make_request(api_url, params)
             
             # Parse the JSONP response
-            response_text = response.text
+            response_text = await response.text()
             if not response_text.startswith('window.google.ac.h('):
                 raise YouTubeError(
                     error_type="PARSE_ERROR",
@@ -170,7 +163,7 @@ class YouTubeAPIWrapper:
                 details=str(e)
             )
     
-    def get_video_info(self, video_id: str) -> Union[Dict,YouTubeError]:
+    async def get_video_info(self, video_id: str) -> Union[Dict,YouTubeError]:
         """
         Fetch metadata for a YouTube video
         
@@ -187,9 +180,9 @@ class YouTubeAPIWrapper:
             params = {"v": video_id.strip()}
             
             logger.info(f"Fetching video info for ID: {video_id}")
-            response = self._make_request(video_url, params)
+            response = await self._make_request(video_url, params)
             
-            html_content = response.text
+            html_content = await response.text()
             
             # Extract JSON data from HTML
             json_data = _extract_player_response(html_content)
@@ -232,8 +225,9 @@ class YouTubeAPIWrapper:
                 error_type="UNEXPECTED_ERROR",
                 message="An unexpected error occurred",
                 details=str(e)
-            ) 
-    def search_videos(self, query: str, max_results: int = 10) -> Union[List[Dict], YouTubeError]:
+            )
+    
+    async def search_videos(self, query: str, max_results: int = 10) -> Union[List[Dict], YouTubeError]:
             """
             Search YouTube for videos by keyword.
 
@@ -250,8 +244,8 @@ class YouTubeAPIWrapper:
                 api_url = "https://www.youtube.com/results"
                 params = {"search_query": query.strip()}
                 logger.info(f"Searching YouTube for videos: '{query}'")
-                response = self._make_request(api_url, params)
-                html_content = response.text
+                response = await self._make_request(api_url, params)
+                html_content = await response.text()
                 videos = _extract_search_results(html_content)
                 if not videos:
                     return YouTubeError(
@@ -268,13 +262,23 @@ class YouTubeAPIWrapper:
                     message="An unexpected error occurred during search.",
                     details=str(e)
                 )
-    def get_channel_info(self,channel_id: str) -> Union[Dict,YouTubeError]:
+            
+    async def get_channel_info(self,channel_id: str) -> Dict:
         """
+        Fetch metadata for a YouTube channel
+        Args:
+            channel_id: YouTube channel ID
+        
+        Returns:
+            Dictionary containing channel metadata
+
+        Raises:
+            YouTubeError: If channel data cannot be retrieved or parsed
         """
-        response = self._make_request(f"https://youtube.com/channel/{channel_id}")
-        data = _extract_initial_data(response.text)
+        response = await self._make_request(f"https://youtube.com/channel/{channel_id}")
+        data = _extract_initial_data(await response.text())
         if not data:
-            return YouTubeError(
+            raise YouTubeError(
                 error_type="PLAYER_RESPONSE_NOT_FOUND",
                 message="ytInitialPlayerResponse not found",
                 details=""
@@ -288,8 +292,3 @@ class YouTubeAPIWrapper:
         result["description"] = pageHeader['content']['pageHeaderViewModel']['description']['descriptionPreviewViewModel']['description']['content']
         result["channel_name"] = pageHeader['pageTitle']
         return result
-
-    def __del__(self):
-        """Close the session when the object is destroyed"""
-        if hasattr(self, 'session'):
-            self.session.close()
