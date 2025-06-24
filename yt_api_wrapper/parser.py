@@ -1,7 +1,13 @@
 from typing import Dict, List, Optional, Union
 from .models import YouTubeError
 import re
-import json
+
+
+try:
+    import orjson as json
+except ImportError:
+    import json
+    orjson = None
 
 def _extract_player_response(html_content: str) -> Optional[str]:
     """

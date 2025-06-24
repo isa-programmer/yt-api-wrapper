@@ -48,6 +48,16 @@ INFO:yt_api_wrapper.yt_api_wrapper:Searching YouTube for videos: 'python course'
 >>> asyncio.run(main())
 ```
 
+# Faster JSON Parsing
+
+You can install this library with the [orjson](https://github.com/ijl/orjson) optional dependency for faster response parsing:
+```bash
+pip install yt-api-wrapper[orjson]
+```
+
+This will install the [orjson](https://github.com/ijl/orjson) library, which is used for faster JSON parsing. If you don't want to use `orjson`, you can install the library without it:
+
+
 ## How to Contribute
 
 1. Fork the repository

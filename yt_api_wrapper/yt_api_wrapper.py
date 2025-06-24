@@ -1,5 +1,12 @@
 import requests
-import json
+
+try:
+    import orjson as json
+except ImportError:
+    import json
+    orjson = None
+
+
 import ast
 import time
 import logging
